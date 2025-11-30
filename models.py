@@ -41,16 +41,26 @@ class Record: # Клас Record представляє окремий конта
         self.phones.append(Phone(phone))
         return True
 
-    def remove_phone(self, phone: str, all_matches: bool = False): # видаляє номер телефону з контакту
+    # def remove_phone(self, phone: str, all_matches: bool = False):
+    #     matches = [p for p in self.phones if p.value == phone]
+
+    #     if not matches:
+    #         return False  # номер не найден
+    #     if all_matches:
+    #         count = len(matches)
+    #         self.phones = [p for p in self.phones if p.value != phone]
+    #         return count
+    # # удаляем только первый найденный
+    #     self.phones.remove(matches[0])
+    #     return True
+
+    def remove_phone(self, phone: str):  # видаляє номер телефону з контакту
         matches = [p for p in self.phones if p.value == phone]
         if not matches:
-            raise ValueError(f"Phone number '{phone}' not found and cannot be removed")
-        if all_matches:
-            count = len(matches)
-            self.phones = [p for p in self.phones if p.value != phone]
-            return count
+            return False  # номер не знайдено
         self.phones.remove(matches[0])
         return True
+
 
     def find_phone(self, phone: str): # шукає номер телефону в контакті
         for phone_obj in self.phones:

@@ -1,6 +1,6 @@
 # handlers.py
 from address_book import AddressBook
-from models import Record
+from models import Record, Phone
 from functools import wraps
 
 def input_error(func):
@@ -15,6 +15,10 @@ def input_error(func):
             return f"❌ {e}"
         except KeyError:
             return "❌ This contact does not exist"
+        except AttributeError as e:
+            if "'NoneType' object has no attribute" in str(e):
+                return "❌ Contact not found"
+            return f"An unexpected attribute error occurred: {e}"
         except Exception as e:
             return f"An unexpected error occurred: {e}"
     return inner
@@ -53,42 +57,52 @@ def change_contact(args, book: AddressBook):
     # args: ["John", "1234567890", "0987654321"]
     name, old_phone, new_phone = args
     record = book.find(name)
-    if record is None:
-        return "Contact not found."
-    record.edit_phone(old_phone, new_phone)
-    return "Phone number updated."
+    old_phone_obj = Phone(old_phone) 
+    new_phone_obj = Phone(new_phone)  
+    record.edit_phone(old_phone_obj.value, new_phone_obj.value) 
+    return "Phone number updated"
 
 
 @input_error
-def show_phone(args, book: AddressBook):
+def show_phone(args, book: AddressBook): # Показує всі номери телефону контакту за ім'ям
     # args: ["John"]
     name, *_ = args
     record = book.find(name)
-    if record is None:
-        return "Contact not found."
     if not record.phones:
-        return "No phone numbers found for this contact."
+        return "No phone numbers found for this contact"
     phones = ', '.join(phone.value for phone in record.phones)
     return f"Phone numbers for {name}: {phones}"
 
-
 @input_error
-def show_all(book: AddressBook):
+def show_all(book: AddressBook): # Показує всі контакти в адресній книзі name phoone birthday(якщо вказано)
     if not book.data:
         return "AddressBook is empty."
     result = []
     for record in book.data.values():
         phones = ', '.join(phone.value for phone in record.phones) if record.phones else "No phone numbers"
-        result.append(f"{record.name.value}: {phones}")
+        if record.birthday:
+            result.append(f"{record.name.value}: {phones} | Birthday: {record.birthday.value}")
+        else:
+            result.append(f"{record.name.value}: {phones} | No birthday")
     return "\n".join(result)
+
+@input_error
+def delete_phone(args, book: AddressBook):
+    # args: ["John", "1234567890"]
+    name, phone_str = args
+    record = book.find(name)
+    phone = Phone(phone_str)  # якщо некоректний номер буде викликана помилка валідації
+    result = record.remove_phone(phone.value)
+    if result:
+        return f"Phone {phone.value} removed for {name}"
+    else:
+        return f"❌ Phone number '{phone.value}' not found for contact {name}"
 
 @input_error
 def add_birthday(args, book: AddressBook): # Додає день народження контакту за ім'ям
     # args: ["John", "01.01.1990"]   
     name, birthday_str = args
     record = book.find(name)
-    if record is None:
-        return "❌ Contact not found"
     record.add_birthday(birthday_str)
     return f"Birthday for {name} to {birthday_str}"
 
@@ -97,8 +111,6 @@ def show_birthday(args, book: AddressBook): # Показує день народ
     # args: ["John"]
     name, *_ = args
     record = book.find(name)
-    if record is None:
-        return "❌ Contact not found"
     if not record.birthday:
         return f"No birthday for {name}"
     return f"{name}'s birthday is: {record.birthday.value}"

@@ -1,6 +1,6 @@
 from address_book import AddressBook
 from handlers import parse_input
-from handlers import add_contact, change_contact, show_phone, show_all, add_birthday, show_birthday, birthdays
+from handlers import add_contact, change_contact, show_phone, show_all, add_birthday, show_birthday, birthdays , delete_phone
 def main():
     book = AddressBook()
     print("Welcome to the assistant bot!")
@@ -21,6 +21,8 @@ def main():
             print(change_contact(args, book))
         elif command == "phone":
             print(show_phone(args, book))
+        elif command == "delete_phone":
+            print(delete_phone(args, book))
         elif command == "all":
             print(show_all(book))
         elif command == "add-birthday":
